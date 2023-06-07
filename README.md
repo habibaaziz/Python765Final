@@ -17,6 +17,12 @@ For this project, my objective was to check whether cancer incidences and death 
 The dataset on cancer deaths by age was used to see the classification of cancer deaths for the 20 countries from 2002 - 2017.  A supervised machine learning technique named Decision Tree Classifier module from sklearn.tree was used to check the categorization of cancer deaths by age around those 20 countries over the period of 15 years.   
 Web scraping techniques were used to mine data contained, which provided information about attributes based on a theme (Huanga, Morillo and Ferri 2019). About 100 pages of text data from google scholar ranging from 2002 - 2017 was mined using BeautifulSoup module, for research topics based on Cancer incidence/death and its relationship to HDI and GDP. Different modules from natural language toolkit (nltk) were used to clean the text data. LDA (Latent Dirichlet Allocation) topic model was applied on the filtered text data, number of topics, K were initially set as 20 with alpha value as 0.01 per 10 words and 20 topics were weighted.
 SNA (Social Network Analysis) was carried out using tweets from Twitter using hashtags on cancer. Tweets were filtered using nltk modules, and a list of words with the most recurrence (co-occurring words/bigrams) was created. After this step, tweets were used to visualize network of bigrams. Furthermore, sentiment analysis on cancer tweets was observed to see cancer relationship with GDP and HDI.   
-[Data 765-final-haziz.docx](https://github.com/habibaaziz/Python765Final/files/11672635/Data.765-final-haziz.docx)
+
+[Data 765-final-haziz.docx](https://github.com/habibaaziz/Python765Final/files/11672664/Data.765-final-haziz.docx)
+
+
+
+
+
 
 
