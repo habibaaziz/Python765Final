@@ -1,0 +1,382 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Text Analysis | SNA | Sentiment analysis
+
+
+# In[89]:
+
+
+#modules import
+
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import itertools
+import collections
+
+import tweepy as tw
+import nltk
+from nltk import bigrams
+from nltk.corpus import stopwords
+import re
+import networkx as nx
+
+import warnings
+warnings.filterwarnings("ignore")
+
+sns.set(font_scale=1.5)
+sns.set_style("whitegrid")
+
+
+# In[90]:
+
+
+#defining my keys
+
+consumer_key= 'wDfiB8LIdPZkqngnZR2g9doVM'
+consumer_secret= '9vGVZwosoZuNiSHpP7wY6WOFgpdNH21wF0eDcICOZRc10IIjCp'
+access_token= '2735159228-UV7M2Wv9wZ5WEPx6lt9p4kdEnQ58euVXmKOhdZW'
+access_token_secret= 'GHLlOmT8eOIFtQ3u664zf5aFX1rFdgontow9I6WZCywZf'
+
+
+# In[91]:
+
+
+auth = tw.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tw.API(auth, wait_on_rate_limit=True)
+
+
+# In[92]:
+
+
+# Create a custom search term cancer and gdp and hdi and define the number of tweets
+search_term = "#cancer+awareness -filter:retweets"
+
+tweets = tw.Cursor(api.search,
+                   q=search_term,
+                   lang="en",
+                   since='2018-11-01').items(1000)
+
+
+# In[93]:
+
+
+# grab and clean up 1000 recent tweets
+
+
+# In[94]:
+
+
+def remove_url(txt):
+    """Replace URLs found in a text string with nothing 
+    (i.e. it will remove the URL from the string).
+
+    Parameters
+    ----------
+    txt : string
+        A text string that you want to parse and remove urls.
+
+    Returns
+    -------
+    The same txt string with url's removed.
+    """
+    
+    url_pattern = re.compile(r'https?://\S+|www\.\S+')
+    no_url = url_pattern.sub(r'', txt)
+
+    return no_url
+
+
+# In[95]:
+
+
+# Remove URLs
+tweets_no_urls = [remove_url(tweet.text) for tweet in tweets]
+
+# Create a sublist of lower case words for each tweet
+words_in_tweet = [tweet.lower().split() for tweet in tweets_no_urls]
+
+# Download stopwords
+nltk.download('stopwords')
+stop_words = set(stopwords.words('english'))
+
+# Remove stop words from each tweet list of words
+tweets_nsw = [[word for word in tweet_words if not word in stop_words]
+              for tweet_words in words_in_tweet]
+
+# Remove collection words
+collection_words = ['climatechange', 'climate', 'change']
+
+tweets_nsw_nc = [[w for w in word if not w in collection_words]
+                 for word in tweets_nsw]
+
+
+# In[96]:
+
+
+#Explore Co-occurring Words
+
+
+# In[97]:
+
+
+# Create list of lists containing bigrams in tweets
+terms_bigram = [list(bigrams(tweet)) for tweet in tweets_nsw_nc]
+
+
+# In[98]:
+
+
+# View bigrams for the first tweet
+terms_bigram[0]
+
+
+# In[99]:
+
+
+# Original tweet without URLs
+tweets_no_urls[0]
+
+
+# In[100]:
+
+
+# Clean tweet 
+tweets_nsw_nc[0]
+
+
+# In[101]:
+
+
+# Flatten list of bigrams in clean tweets
+bigrams = list(itertools.chain(*terms_bigram))
+
+# Create counter of words in clean bigrams
+bigram_counts = collections.Counter(bigrams)
+
+
+# In[102]:
+
+
+bigram_counts.most_common(25)
+
+
+# In[103]:
+
+
+#data frames 
+
+bigram_df = pd.DataFrame(bigram_counts.most_common(25),
+                             columns=['bigram', 'count'])
+
+bigram_df
+
+
+# In[104]:
+
+
+#Visualize Networks of Bigrams
+# Create dictionary of bigrams and their counts
+d = bigram_df.set_index('bigram').T.to_dict('records')
+
+
+# In[105]:
+
+
+# Create network plot 
+G = nx.Graph()
+
+
+# In[106]:
+
+
+# Create connections between nodes
+for k, v in d[0].items():
+    G.add_edge(k[0], k[1], weight=(v * 10))
+
+G.add_node("HDI", weight=100)
+
+
+# In[107]:
+
+
+fig, ax = plt.subplots(figsize=(10, 8))
+
+pos = nx.spring_layout(G, k=2)
+
+# Plot networks
+nx.draw_networkx(G, pos,
+                 font_size=16,
+                 width=3,
+                 edge_color='blue',
+                 node_color='red',
+                 with_labels = False,
+                  ax=ax)
+# Create offset labels
+for key, value in pos.items():
+    x, y = value[0]+.135, value[1]+.045
+    ax.text(x, y,
+            s=key,
+            #bbox=dict(facecolor='red', alpha=0.25),
+            horizontalalignment='center', fontsize=12)
+    
+plt.show()
+
+
+# In[108]:
+
+
+# Create network plot 
+H = nx.Graph()
+
+
+# In[109]:
+
+
+# Create connections between nodes
+for k, v in d[0].items():
+    H.add_edge(k[0], k[1], weight=(v * 10))
+
+H.add_node("GDP", weight=100)
+
+
+# In[110]:
+
+
+fig, ax = plt.subplots(figsize=(10, 8))
+
+pos = nx.spring_layout(G, k=2)
+
+# Plot networks
+nx.draw_networkx(G, pos,
+                 font_size=16,
+                 width=3,
+                 edge_color='blue',
+                 node_color='red',
+                 with_labels = False,
+                  ax=ax)
+# Create offset labels
+for key, value in pos.items():
+    x, y = value[0]+.135, value[1]+.045
+    ax.text(x, y,
+            s=key,
+            #bbox=dict(facecolor='red', alpha=0.25),
+            horizontalalignment='center', fontsize=12)
+    
+plt.show()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+#Sentiment analysis
+
+
+# In[111]:
+
+
+auth = tw.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tw.API(auth, wait_on_rate_limit=True)
+
+
+# In[112]:
+
+
+def remove_url(txt):
+    """Replace URLs found in a text string with nothing 
+    (i.e. it will remove the URL from the string).
+
+    Parameters
+    ----------
+    txt : string
+        A text string that you want to parse and remove urls.
+
+    Returns
+    -------
+    The same txt string with url's removed.
+    """
+
+    return " ".join(re.sub("([^0-9A-Za-z \t])|(\w+:\/\/\S+)", "", txt).split())
+
+
+# In[113]:
+
+
+# Create a custom search term and define the number of tweets
+search_term = "#cancer+awareness -filter:retweets"
+
+tweets = tw.Cursor(api.search,
+                   q=search_term,
+                   lang="en",
+                   since='2018-11-01').items(1000)
+
+# Remove URLs
+tweets_no_urls = [remove_url(tweet.text) for tweet in tweets]
+
+
+# In[115]:
+
+
+from textblob import TextBlob
+
+
+# In[116]:
+
+
+# Create textblob objects of the tweets
+sentiment_objects = [TextBlob(tweet) for tweet in tweets_no_urls]
+
+sentiment_objects[0].polarity, sentiment_objects[0]
+
+
+# In[117]:
+
+
+# Create list of polarity valuesx and tweet text
+sentiment_values = [[tweet.sentiment.polarity, str(tweet)] for tweet in sentiment_objects]
+
+sentiment_values[0]
+
+
+# In[118]:
+
+
+# Create dataframe containing the polarity value and tweet text
+sentiment_df = pd.DataFrame(sentiment_values, columns=["polarity", "tweet"])
+
+sentiment_df.head()
+
+
+# In[119]:
+
+
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Plot histogram of the polarity values
+sentiment_df.hist(bins=[-1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1],
+             ax=ax,
+             color="pink")
+
+plt.title("Sentiments from Tweets on Cancer Awareness")
+plt.show()
+
+
+# In[ ]:
+
+
+
+
